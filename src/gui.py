@@ -9,16 +9,16 @@ from PyQt6.QtCore import Qt
 from src import youtubedl
 
 class MainWindow(QWidget):
-
-    vid_total_length = 0
-    vid_total_space = 0
-    title_list = []
-    url_list = []
-    directory = ""
-    audio_only_bool = False
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # VARIABLES
+        self.vid_total_length = 0
+        self.vid_total_space = 0
+        self.title_list = []
+        self.url_list = []
+        self.directory = ""
         
         self.setWindowTitle('Youtube Downloader GUI')
         self.setGeometry(100, 100, 500, 300)
@@ -79,8 +79,8 @@ class MainWindow(QWidget):
         self.show()
 
 
-    def on_checked_box(self, box):
-        state = Qt.CheckState(box)
+    def on_checked_box(self):
+        state = Qt.CheckState(self.audio_only)
         
         if state == Qt.CheckState.Checked:
             self.audio_only_bool = True
@@ -96,12 +96,15 @@ class MainWindow(QWidget):
                 widget.deleteLater()
 
     # This is a function for a universal update (updates everything)
-    def update(self) -> None:
+    def refresh_ui(self) -> None:
         self.total_length_label.setText(f"Total Length: {round(self.vid_total_length, 2)} Minute(s)")
         self.total_space_label.setText(f"Total Space: {round(self.vid_total_space, 1)} MB")
 
+        self.clear_titles(self.title_list_layout)
+        
         for title in self.title_list:
-            self.title_list_layout.addWidget(title)
+            label = QLabel(title)
+            self.title_list_layout.addWidget(label)
 
     # Uses video_info function to extract data and put it on the Widgets
     def get_video_info(self) -> None:
@@ -112,9 +115,8 @@ class MainWindow(QWidget):
             self.vid_total_length += data["duration"]/60 # Converts from seconds to minutes
             self.vid_total_space += data["filesize"]/1000000 # Converts from bytes to Megabytes
             
-            # Creates a label to display on the url_list_widget
-            _title_label = QLabel(data["title"])
-            self.title_list.append(_title_label)
+            # Adds title to the title list to create widgets
+            self.title_list.append(data["title"])
             self.url_list.append(url)
             
         except Exception as e:
@@ -123,7 +125,7 @@ class MainWindow(QWidget):
             return
         
         self.url_edit.setText("")
-        self.update()
+        self.refresh_ui()
         
         
     def set_destination(self) -> None:
@@ -131,15 +133,17 @@ class MainWindow(QWidget):
         
     
     def download_videos(self) -> None:
+        audio_only = self.audio_only.isChecked()
         
         for url in self.url_list:
-            youtubedl.download_video(url, self.directory, self.audio_only_bool)
+            youtubedl.download_video(url, self.directory, audio_only)
             
         # Resetting values for a fresh start
-        self.clear_titles(self.title_list_layout)
+        self.title_list.clear()
+        self.url_list.clear()
         self.vid_total_length = 0
         self.vid_total_space = 0
-        self.update()
+        self.refresh_ui()
         
 
 if __name__ == '__main__':

@@ -39,8 +39,8 @@ def download_video(url: str, dst: str, audio: bool = False) -> None:
         "format": "bestvideo+bestaudio/best"
     }
     
+    #TODO: Fix audio cuz it no work idk why
     if audio:
-        print("AUDIO IS TRUE IF THIS IS RUN")
         ydl_opts = {
             "outtmpl": outtmpl,
             "format": "bestaudio/best",
